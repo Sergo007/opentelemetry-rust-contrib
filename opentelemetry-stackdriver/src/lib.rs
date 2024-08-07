@@ -41,7 +41,7 @@ use thiserror::Error;
 #[cfg(any(feature = "yup-authorizer", feature = "gcp-authorizer"))]
 use tonic::metadata::MetadataValue;
 use tonic::{
-    transport::{Channel, ClientTlsConfig},
+    transport::Channel,
     Code, Request,
 };
 #[cfg(feature = "yup-authorizer")]
@@ -163,6 +163,16 @@ impl Builder {
         self.log_context = Some(log_context);
         self
     }
+    #[cfg(feature = "tls-native-roots")]
+    fn init_tls_config(domain_name: String) -> tonic::transport::ClientTlsConfig {
+        tonic::transport::ClientTlsConfig::new()
+            .domain_name(domain_name)
+    }
+    #[cfg(feature = "tls-webpki-roots")]
+    fn init_tls_config(domain_name: String) -> tonic::transport::ClientTlsConfig {
+        tonic::transport::ClientTlsConfig::new()
+            .domain_name(domain_name)
+    } 
 
     pub async fn build<A: Authorizer>(
         self,
@@ -176,10 +186,10 @@ impl Builder {
             num_concurrent_requests,
             log_context,
         } = self;
-        let uri = http::uri::Uri::from_static("https://cloudtrace.googleapis.com:443");
+        let uri = http::uri::Uri::from_static("https://cloudtrace.googleapis.com");
 
         let trace_channel = Channel::builder(uri)
-            .tls_config(ClientTlsConfig::new())
+        .tls_config(Self::init_tls_config("cloudtrace.googleapis.com".to_string()))
             .map_err(|e| Error::Transport(e.into()))?
             .connect()
             .await
@@ -188,9 +198,9 @@ impl Builder {
         let log_client = match log_context {
             Some(log_context) => {
                 let log_channel = Channel::builder(http::uri::Uri::from_static(
-                    "https://logging.googleapis.com:443",
+                    "https://logging.googleapis.com",
                 ))
-                .tls_config(ClientTlsConfig::new())
+                .tls_config(Self::init_tls_config("logging.googleapis.com".to_string()))
                 .map_err(|e| Error::Transport(e.into()))?
                 .connect()
                 .await
