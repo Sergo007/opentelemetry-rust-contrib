@@ -168,12 +168,12 @@ impl Builder {
     }
     #[cfg(feature = "tls-native-roots")]
     fn init_tls_config(domain_name: String) -> tonic::transport::ClientTlsConfig {
-        tonic::transport::ClientTlsConfig::new()
+        tonic::transport::ClientTlsConfig::new().with_native_roots()
             .domain_name(domain_name)
     }
     #[cfg(feature = "tls-webpki-roots")]
     fn init_tls_config(domain_name: String) -> tonic::transport::ClientTlsConfig {
-        tonic::transport::ClientTlsConfig::new()
+        tonic::transport::ClientTlsConfig::new().with_webpki_roots()
             .domain_name(domain_name)
     } 
 
