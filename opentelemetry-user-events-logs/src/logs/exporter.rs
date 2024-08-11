@@ -119,7 +119,7 @@ impl UserEventsExporter {
                 eb.add_value(field_name, f, FieldFormat::Float, 0);
             }
             AnyValue::String(s) => {
-                eb.add_str(field_name, &s.to_string(), FieldFormat::Default, 0);
+                eb.add_str(field_name, s.to_string(), FieldFormat::Default, 0);
             }
             _ => (),
         }
@@ -315,9 +315,9 @@ impl Debug for UserEventsExporter {
 
 #[async_trait]
 impl opentelemetry_sdk::export::logs::LogExporter for UserEventsExporter {
-    async fn export(
+    async fn export<'a>(
         &mut self,
-        batch: Vec<opentelemetry_sdk::export::logs::LogData>,
+        batch: Vec<Cow<'a, opentelemetry_sdk::export::logs::LogData>>,
     ) -> opentelemetry::logs::LogResult<()> {
         for log_data in batch {
             let _ = self.export_log_data(&log_data);
